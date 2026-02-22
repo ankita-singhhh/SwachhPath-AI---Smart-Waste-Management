@@ -2,6 +2,11 @@ export interface Dustbin {
   id: string;
   location: string;
   fillLevel: number;
+  lastUpdate?: Date;
+  priority?: "Normal" | "Medium" | "Critical";
+  alerted?: boolean;
+  temperatureC?: number;
+  humidityPercent?: number;
 }
 
 export interface Postcode {

@@ -1,11 +1,15 @@
-import { useMemo, useEffect, useRef } from "react";
+import { useMemo, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
+import { useNavigate } from "react-router";
 import { useAuth } from "@/react-app/context/AuthContext";
 import { useData } from "@/react-app/context/DataContext";
+import { useIoTSimulation } from "@/react-app/context/IoTSimulationContext";
 import { getFillStatus } from "@/react-app/types";
 import DashboardLayout from "@/react-app/components/layout/DashboardLayout";
 import StatCard from "@/react-app/components/cards/StatCard";
 import DustbinCard from "@/react-app/components/cards/DustbinCard";
+import AlertPanel from "@/react-app/components/AlertPanel";
+import { Button } from "@/react-app/components/ui/button";
 import {
   Trash2,
   AlertTriangle,
@@ -13,6 +17,8 @@ import {
   Bell,
   TrendingUp,
   Activity,
+  Settings,
+  BarChart3,
 } from "lucide-react";
 import {
   AreaChart,
@@ -27,11 +33,17 @@ import {
 } from "recharts";
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
-  const { postcodes, complaints, markDustbinEmptied } = useData();
+  const { postcodes: dataPostcodes, complaints, markDustbinEmptied } = useData();
+  const { postcodes: iotPostcodes, alerts, manuallyEmptyBin } = useIoTSimulation();
+  const [showAlerts, setShowAlerts] = useState(true);
   const pageRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const chartsRef = useRef<HTMLDivElement>(null);
+
+  // Use IoT postcodes if available, fallback to data context
+  const postcodes = iotPostcodes.length > 0 ? iotPostcodes : dataPostcodes;
 
   useEffect(() => {
     // Animate page content
@@ -75,7 +87,8 @@ export default function DashboardPage() {
     const allDustbins = filteredPostcodes.flatMap((p) =>
       p.dustbins.map((d) => ({ ...d, area: p.area, pin: p.pin }))
     );
-    const fullBins = allDustbins.filter((d) => getFillStatus(d.fillLevel) === "high");
+    const criticalBins = allDustbins.filter((d) => d.fillLevel > 80);
+    const mediumBins = allDustbins.filter((d) => d.fillLevel >= 60 && d.fillLevel <= 80);
     const activeAreas = new Set(filteredPostcodes.map((p) => p.area)).size;
     const userComplaints = user?.role === "admin" 
       ? complaints 
@@ -83,14 +96,15 @@ export default function DashboardPage() {
 
     return {
       totalBins: allDustbins.length,
-      fullBins: fullBins.length,
+      fullBins: criticalBins.length,
       activeAreas,
-      alerts: fullBins.length,
+      alerts: alerts.length,
       pendingComplaints: userComplaints.filter((c) => c.status === "Pending").length,
       allDustbins,
-      criticalBins: fullBins,
+      criticalBins,
+      mediumBins,
     };
-  }, [filteredPostcodes, complaints, user]);
+  }, [filteredPostcodes, complaints, user, alerts]);
 
   // Chart data
   const areaChartData = useMemo(() => {
@@ -121,20 +135,38 @@ export default function DashboardPage() {
     <DashboardLayout>
       <div ref={pageRef} className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-foreground">
-              {user?.role === "admin" ? "Admin Dashboard" : "My Dashboard"}
+              {user?.role === "admin" ? "Smart Waste Management" : "My Dashboard"}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              {user?.role === "admin"
-                ? "Overview of all areas in Gorakhpur"
-                : `Monitoring ${filteredPostcodes[0]?.area || "your area"}`}
+              Real-time IoT monitoring system for waste management
             </p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
-            <Activity className="w-4 h-4 text-primary" />
-            <span className="text-xs font-medium text-primary">Live Monitoring</span>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/analytics")}
+              className="gap-2"
+            >
+              <BarChart3 className="w-4 h-4" />
+              Analytics
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/settings")}
+              className="gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Settings
+            </Button>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
+              <Activity className="w-4 h-4 text-primary animate-pulse" />
+              <span className="text-xs font-medium text-primary">Live</span>
+            </div>
           </div>
         </div>
 
@@ -169,6 +201,17 @@ export default function DashboardPage() {
             variant="warning"
           />
         </div>
+
+        {/* Active Alerts Panel */}
+        {showAlerts && (
+          <div>
+            <AlertPanel
+              onViewDetails={(pin, binId) => {
+                navigate(`/dustbin/${pin}/${binId}`);
+              }}
+            />
+          </div>
+        )}
 
         {/* Charts Row */}
         <div ref={chartsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -273,25 +316,26 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Critical Bins Section */}
-        {stats.criticalBins.length > 0 && (
+        {/* Critical & Medium Bins Section */}
+        {(stats.criticalBins.length > 0 || stats.mediumBins.length > 0) && (
           <div>
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle className="w-5 h-5 text-red-400" />
-              <h3 className="font-semibold text-foreground">Critical Bins</h3>
+              <h3 className="font-semibold text-foreground">Bins Requiring Attention</h3>
               <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-red-500/20 text-red-400">
-                {stats.criticalBins.length} bins need attention
+                {stats.criticalBins.length} critical
               </span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {stats.criticalBins.slice(0, 6).map((bin) => (
-                <DustbinCard
-                  key={bin.id}
-                  {...bin}
-                  showEmptyButton={user?.role === "admin"}
-                  onMarkEmpty={() => markDustbinEmptied(bin.pin, bin.id)}
-                  predictedOverflow={calculateOverflow(bin.fillLevel)}
-                />
+                <div key={bin.id} onClick={() => navigate(`/dustbin/${bin.pin}/${bin.id}`)}>
+                  <DustbinCard
+                    {...bin}
+                    showEmptyButton={user?.role === "admin"}
+                    onMarkEmpty={() => manuallyEmptyBin(bin.pin, bin.id)}
+                    predictedOverflow={calculateOverflow(bin.fillLevel)}
+                  />
+                </div>
               ))}
             </div>
           </div>

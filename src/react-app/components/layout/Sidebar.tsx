@@ -11,20 +11,26 @@ import {
   Recycle,
   Menu,
   X,
+  BarChart3,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/react-app/lib/utils";
 
 const adminNavItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/analytics", label: "Analytics", icon: BarChart3 },
   { path: "/localities", label: "Localities", icon: MapPin },
   { path: "/dustbins", label: "Dustbins", icon: Trash2 },
   { path: "/complaints", label: "Complaints", icon: MessageSquareWarning },
+  { path: "/settings", label: "Settings", icon: Settings },
 ];
 
 const userNavItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/analytics", label: "Analytics", icon: BarChart3 },
   { path: "/dustbins", label: "My Area Dustbins", icon: Trash2 },
   { path: "/complaints", label: "Complaints", icon: MessageSquareWarning },
+  { path: "/settings", label: "Settings", icon: Settings },
 ];
 
 export default function Sidebar() {
