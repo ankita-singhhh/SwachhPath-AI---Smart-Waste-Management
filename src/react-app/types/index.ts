@@ -86,3 +86,57 @@ export function getProgressColor(status: FillStatus): string {
       return "bg-red-500";
   }
 }
+
+// IoT Device Types
+export interface IoTDevice {
+  deviceId: string;
+  binId: string;
+  pin: string;
+  name: string;
+  location: string;
+  latitude: number;
+  longitude: number;
+  status: "online" | "offline";
+  batteryLevel: number;
+  signal: number;
+  lastHeartbeat: string;
+  fillLevel: number;
+  temperature: number;
+  humidity: number;
+  gpsAccuracy: number;
+  sensorErrors: number;
+  uptime: number;
+  maintenanceScheduled: boolean;
+}
+
+export interface IoTStreamData {
+  devices: IoTDevice[];
+}
+
+// AI Insights Types
+export interface AIInsight {
+  id: string;
+  type: "prediction" | "recommendation" | "alert" | "analysis";
+  title: string;
+  description: string;
+  impact: "high" | "medium" | "low";
+  confidence: number;
+  binId?: string;
+  deviceId?: string;
+  createdAt: string;
+  actionable: boolean;
+}
+
+export interface AIInsightsData {
+  insights: AIInsight[];
+}
+
+// Device Status Badge Type
+export type DeviceHealthStatus = "healthy" | "warning" | "critical" | "offline";
+
+export function getDeviceHealth(device: IoTDevice): DeviceHealthStatus {
+  if (device.status === "offline") return "offline";
+  if (device.batteryLevel < 20 || device.sensorErrors > 2) return "critical";
+  if (device.batteryLevel < 40 || device.signal < 50 || device.sensorErrors > 0) return "warning";
+  return "healthy";
+}
