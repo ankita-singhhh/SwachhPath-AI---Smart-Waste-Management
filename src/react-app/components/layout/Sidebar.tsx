@@ -13,12 +13,16 @@ import {
   X,
   BarChart3,
   Settings,
+  Brain,
+  Map,
 } from "lucide-react";
 import { cn } from "@/react-app/lib/utils";
 
 const adminNavItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/live-map", label: "Live Map", icon: Map },
   { path: "/analytics", label: "Analytics", icon: BarChart3 },
+  { path: "/ai-insights", label: "AI Insights", icon: Brain },
   { path: "/localities", label: "Localities", icon: MapPin },
   { path: "/dustbins", label: "Dustbins", icon: Trash2 },
   { path: "/complaints", label: "Complaints", icon: MessageSquareWarning },
@@ -27,7 +31,9 @@ const adminNavItems = [
 
 const userNavItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/live-map", label: "Live Map", icon: Map },
   { path: "/analytics", label: "Analytics", icon: BarChart3 },
+  { path: "/ai-insights", label: "AI Insights", icon: Brain },
   { path: "/dustbins", label: "My Area Dustbins", icon: Trash2 },
   { path: "/complaints", label: "Complaints", icon: MessageSquareWarning },
   { path: "/settings", label: "Settings", icon: Settings },

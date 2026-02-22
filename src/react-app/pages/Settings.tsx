@@ -1,17 +1,19 @@
 import { useNavigate } from "react-router";
-import { ArrowLeft, RotateCcw } from "lucide-react";
+import { ArrowLeft, RotateCcw, Brain, Trash2 } from "lucide-react";
 import { Button } from "@/react-app/components/ui/button";
 import { Card } from "@/react-app/components/ui/card";
 import { Slider } from "@/react-app/components/ui/slider";
 import { Switch } from "@/react-app/components/ui/switch";
 import { Label } from "@/react-app/components/ui/label";
 import { useIoTSimulation } from "@/react-app/context/IoTSimulationContext";
+import { useAIInsights } from "@/react-app/context/AIInsightsContext";
 import { useState } from "react";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
   const { settings, updateSettings, resetAllData, isSimulating } =
     useIoTSimulation();
+  const { generateInsights, clearInsights } = useAIInsights();
 
   const [fillRateMin, setFillRateMin] = useState(settings.fillRateMin);
   const [fillRateMax, setFillRateMax] = useState(settings.fillRateMax);
@@ -20,6 +22,9 @@ export default function SettingsPage() {
     settings.refreshInterval / 1000
   );
   const [simulationEnabled, setSimulationEnabled] = useState(settings.enabled);
+  const [aiEnabled, setAiEnabled] = useState(() => {
+    return localStorage.getItem("ai_enabled") !== "false";
+  });
 
   const handleSaveSettings = () => {
     updateSettings({
@@ -29,6 +34,7 @@ export default function SettingsPage() {
       refreshInterval: refreshInterval * 1000,
       enabled: simulationEnabled,
     });
+    localStorage.setItem("ai_enabled", String(aiEnabled));
   };
 
   return (
@@ -190,6 +196,53 @@ export default function SettingsPage() {
           >
             Save Settings
           </Button>
+        </Card>
+
+        {/* AI Settings */}
+        <Card className="rounded-2xl p-8 border-border/50 bg-card/50 backdrop-blur mb-6">
+          <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
+            <Brain className="w-5 h-5 text-primary" />
+            AI Insights Configuration
+          </h2>
+
+          {/* AI Toggle */}
+          <div className="mb-8 pb-8 border-b border-border/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-base font-semibold text-foreground">
+                  Enable AI Insights
+                </Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Generate Gemini AI-powered predictions and recommendations
+                </p>
+              </div>
+              <Switch
+                checked={aiEnabled}
+                onCheckedChange={setAiEnabled}
+              />
+            </div>
+          </div>
+
+          {/* AI Actions */}
+          {aiEnabled && (
+            <div className="space-y-3">
+              <Button
+                onClick={() => generateInsights()}
+                className="w-full gap-2"
+              >
+                <Brain className="w-4 h-4" />
+                Generate New Insights
+              </Button>
+              <Button
+                onClick={() => clearInsights()}
+                variant="outline"
+                className="w-full gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Clear All Insights
+              </Button>
+            </div>
+          )}
         </Card>
 
         {/* Data Management */}

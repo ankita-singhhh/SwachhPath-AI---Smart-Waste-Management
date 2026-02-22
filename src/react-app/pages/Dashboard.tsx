@@ -9,6 +9,7 @@ import DashboardLayout from "@/react-app/components/layout/DashboardLayout";
 import StatCard from "@/react-app/components/cards/StatCard";
 import DustbinCard from "@/react-app/components/cards/DustbinCard";
 import AlertPanel from "@/react-app/components/AlertPanel";
+import { AISuggestionsCard } from "@/react-app/components/AISuggestionsCard";
 import { Button } from "@/react-app/components/ui/button";
 import {
   Trash2,
@@ -19,6 +20,7 @@ import {
   Activity,
   Settings,
   BarChart3,
+  Brain,
 } from "lucide-react";
 import {
   AreaChart,
@@ -212,6 +214,9 @@ export default function DashboardPage() {
             />
           </div>
         )}
+
+        {/* AI Suggestions */}
+        <AISuggestionsCard />
 
         {/* Charts Row */}
         <div ref={chartsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
